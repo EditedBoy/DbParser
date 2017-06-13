@@ -6,7 +6,9 @@ import java.sql.*;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 
 public class JDBCUtil {
@@ -33,23 +35,15 @@ public class JDBCUtil {
         return instance;
     }
 
-    private Connection openConnection(final String fileName) {
-        try {
-            return DriverManager.getConnection("Jdbc:sqlite:" + this.findFile(fileName));
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
 
-
-    private String findFile(final String fileName) {
+    private String findFileInResources(final String fileName) {
         return getClass().getClassLoader().getResource(fileName).getFile();
     }
 
     public List<String> getDataFromDB() {
         final String query = "SELECT timestamp, chatname, author, from_dispname, body_xml FROM Messages ORDER BY timestamp";
-        try (Connection connection = DriverManager.getConnection("Jdbc:sqlite:" + this.findFile("main1.db"))) {
+        Map<String, String> result = new HashMap<>();
+        try (Connection connection = DriverManager.getConnection("Jdbc:sqlite:D:\\Programing\\Elex\\main1.db")) {
             Statement statement = connection.createStatement();
 
             System.out.println(getTableColumns(connection, "messages"));
@@ -66,9 +60,7 @@ public class JDBCUtil {
                 String fromDisplayName = rs.getString(4);
                 String message = rs.getString(5);
 
-
                 System.out.println(String.format("'%s' => [%s] %s(%s): %s", chat, time, fromDisplayName, fromLoginName, message));
-
             }
         } catch (SQLException e) {
             e.printStackTrace();
