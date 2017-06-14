@@ -9,13 +9,15 @@ public class MessageDto {
     private String chatName;
     private String fromLoginName;
     private String fromDisplayName;
+    private String dialogPartner;
     private String message;
 
-    public MessageDto(LocalDateTime time, String chatName, String fromLoginName, String fromDisplayName, String message) {
+    public MessageDto(LocalDateTime time, String chatName, String fromLoginName, String fromDisplayName, String dialogPartner, String message) {
         this.time = time;
         this.chatName = chatName;
         this.fromLoginName = fromLoginName;
         this.fromDisplayName = fromDisplayName;
+        this.dialogPartner = dialogPartner;
         this.message = message;
     }
 
@@ -33,6 +35,10 @@ public class MessageDto {
 
     public String getFromDisplayName() {
         return fromDisplayName;
+    }
+
+    public String getDialogPartner() {
+        return dialogPartner;
     }
 
     public String getMessage() {

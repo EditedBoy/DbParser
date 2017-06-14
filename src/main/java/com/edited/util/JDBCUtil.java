@@ -2,6 +2,13 @@ package com.edited.util;
 
 import com.edited.dto.MessageDto;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.LinkOption;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -38,7 +45,7 @@ public class JDBCUtil {
     }
 
     public Map<String, List<String>> getDataFromDB(final String dbPath) {
-        final String query = "SELECT timestamp, chatname, author, from_dispname, body_xml FROM Messages ORDER BY timestamp";
+        final String query = "SELECT timestamp, chatname, author, from_dispname, dialog_partner, body_xml FROM Messages ORDER BY timestamp";
         Map<String, List<String>> result = new HashMap<>();
         try (Connection connection = DriverManager.getConnection("Jdbc:sqlite:" + dbPath)) {
             Statement statement = connection.createStatement();
@@ -51,17 +58,23 @@ public class JDBCUtil {
                 String chat = resultSet.getString(2);
                 String fromLoginName = resultSet.getString(3);
                 String fromDisplayName = resultSet.getString(4);
-                String message = resultSet.getString(5);
+                String dialogPartner = resultSet.getString(5);
+                String message = resultSet.getString(6);
 
                 set.add(chat);
-                list.add(new MessageDto(time, chat, fromLoginName, fromDisplayName, message));
+                list.add(new MessageDto(time, chat, fromLoginName, fromDisplayName, dialogPartner, message));
             }
 
             for (String chatName : set) {
                 List<String> resultList = new ArrayList<>();
                 for (MessageDto elem : list) {
-                    if (chatName.equals(elem.getChatName())) {
-                        resultList.add(elem.getFullMessage());
+                    if (elem.getDialogPartner() == null) {
+                        if (chatName.equals(elem.getChatName())) {
+                            resultList.add(elem.getFullMessage());
+                        }
+                    } else {
+                        if (chatName.equals(elem.getDialogPartner()))
+                            resultList.add(elem.getFullMessage());
                     }
                 }
                 result.put(chatName, resultList);
@@ -71,6 +84,32 @@ public class JDBCUtil {
         }
 
         return result;
+    }
+
+    public boolean exportToTxt(final String folderPath, Map<String, List<String>> printData) {
+        Path folcerPath = new File(folderPath).toPath();
+        if (!Files.exists(folcerPath)) {
+            return false;
+        }
+        for (Map.Entry<String, List<String>> entry : printData.entrySet()) {
+            if (entry.getValue().isEmpty()) {
+                continue;
+            }
+            String fileName = entry.getKey();
+            fileName = fileName.replaceAll("#", "").replaceAll("/\\$", "_").replaceAll(";", "_");
+            String file = folderPath + "\\" + fileName + ".txt";
+
+            try {
+                Path path = Paths.get(file);
+                Files.write(path, entry.getValue(), Charset.forName("UTF-8"));
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (Exception e) {
+                System.err.println("Can't create file: " + fileName);
+            }
+        }
+
+        return true;
     }
 
     public List<String> getTableColumns(final Connection connection, final String tableName) throws SQLException {
