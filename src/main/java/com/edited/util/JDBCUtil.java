@@ -66,11 +66,6 @@ public class JDBCUtil {
                 }
                 result.put(chatName, resultList);
             }
-            List<String> resultList = result.get("masyanya_world");
-            for (String elem : resultList) {
-                System.out.println(elem);
-            }
-
         } catch (SQLException e) {
             e.printStackTrace();
         }
