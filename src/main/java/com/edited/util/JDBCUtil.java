@@ -1,14 +1,11 @@
 package com.edited.util;
 
-import com.sun.org.apache.xerces.internal.impl.dv.xs.AbstractDateTimeDV;
+import com.edited.dto.MessageDto;
 
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 
 public class JDBCUtil {
@@ -40,33 +37,45 @@ public class JDBCUtil {
         return getClass().getClassLoader().getResource(fileName).getFile();
     }
 
-    public List<String> getDataFromDB() {
+    public Map<String, List<String>> getDataFromDB(final String dbPath) {
         final String query = "SELECT timestamp, chatname, author, from_dispname, body_xml FROM Messages ORDER BY timestamp";
-        Map<String, String> result = new HashMap<>();
-        try (Connection connection = DriverManager.getConnection("Jdbc:sqlite:D:\\Programing\\Elex\\main1.db")) {
+        Map<String, List<String>> result = new HashMap<>();
+        try (Connection connection = DriverManager.getConnection("Jdbc:sqlite:" + dbPath)) {
             Statement statement = connection.createStatement();
+            ResultSet resultSet = statement.executeQuery(query);
 
-            System.out.println(getTableColumns(connection, "messages"));
+            Set<String> set = new HashSet<>();
+            List<MessageDto> list = new ArrayList<>();
+            while (resultSet.next()) {
+                LocalDateTime time = LocalDateTime.ofInstant(new Timestamp(Long.parseLong(resultSet.getString(1)) * 1000).toInstant(), ZoneOffset.ofHours(0));
+                String chat = resultSet.getString(2);
+                String fromLoginName = resultSet.getString(3);
+                String fromDisplayName = resultSet.getString(4);
+                String message = resultSet.getString(5);
 
-            ResultSet rs = statement.executeQuery(query);
-            ResultSetMetaData rsmd = rs.getMetaData();
-
-            // Iterate through the data in the result set and display it.
-            while (rs.next()) {
-                //Print one row
-                LocalDateTime time = LocalDateTime.ofInstant(new Timestamp(Long.parseLong(rs.getString(1)) * 1000).toInstant(), ZoneOffset.ofHours(0));
-                String chat = rs.getString(2);
-                String fromLoginName = rs.getString(3);
-                String fromDisplayName = rs.getString(4);
-                String message = rs.getString(5);
-
-                System.out.println(String.format("'%s' => [%s] %s(%s): %s", chat, time, fromDisplayName, fromLoginName, message));
+                set.add(chat);
+                list.add(new MessageDto(time, chat, fromLoginName, fromDisplayName, message));
             }
+
+            for (String chatName : set) {
+                List<String> resultList = new ArrayList<>();
+                for (MessageDto elem : list) {
+                    if (chatName.equals(elem.getChatName())) {
+                        resultList.add(elem.getFullMessage());
+                    }
+                }
+                result.put(chatName, resultList);
+            }
+            List<String> resultList = result.get("masyanya_world");
+            for (String elem : resultList) {
+                System.out.println(elem);
+            }
+
         } catch (SQLException e) {
             e.printStackTrace();
         }
 
-        return null;
+        return result;
     }
 
     public List<String> getTableColumns(final Connection connection, final String tableName) throws SQLException {
