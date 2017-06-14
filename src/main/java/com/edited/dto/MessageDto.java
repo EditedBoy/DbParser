@@ -23,40 +23,20 @@ public class MessageDto {
         return time;
     }
 
-    public void setTime(LocalDateTime time) {
-        this.time = time;
-    }
-
     public String getChatName() {
         return chatName;
-    }
-
-    public void setChatName(String chatName) {
-        this.chatName = chatName;
     }
 
     public String getFromLoginName() {
         return fromLoginName;
     }
 
-    public void setFromLoginName(String fromLoginName) {
-        this.fromLoginName = fromLoginName;
-    }
-
     public String getFromDisplayName() {
         return fromDisplayName;
     }
 
-    public void setFromDisplayName(String fromDisplayName) {
-        this.fromDisplayName = fromDisplayName;
-    }
-
     public String getMessage() {
         return message;
-    }
-
-    public void setMessage(String message) {
-        this.message = message;
     }
 
     public String getFullMessage() {
