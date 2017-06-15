@@ -7,9 +7,8 @@ public class Main {
 
     public static void main(String[] args) {
         JDBCUtil instance = JDBCUtil.getInstance();
-        Map<String, List<String>> dataFromDB = instance.getDataFromDB("D:\\dev\\asdasd1\\main1.db");
+        Map<String, List<String>> dataFromDB = instance.getDataFromDB("D:\\dev\\asdasd1\\l.db");
 
         System.out.println(instance.exportToTxt("D:\\dev\\output", dataFromDB));
-
     }
 }

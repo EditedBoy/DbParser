@@ -91,24 +91,34 @@ public class JDBCUtil {
         if (!Files.exists(folcerPath)) {
             return false;
         }
+        List<String> fullContentFile = new ArrayList<>();
+        final String fullContentFileName = "_ALL_CONTENT";
         for (Map.Entry<String, List<String>> entry : printData.entrySet()) {
             if (entry.getValue().isEmpty()) {
                 continue;
             }
             String fileName = entry.getKey();
             fileName = fileName.replaceAll("#", "").replaceAll("/\\$", "_").replaceAll(";", "_");
-            String file = folderPath + "\\" + fileName + ".txt";
-
-            try {
-                Path path = Paths.get(file);
-                Files.write(path, entry.getValue(), Charset.forName("UTF-8"));
-            } catch (IOException e) {
-                e.printStackTrace();
-            } catch (Exception e) {
-                System.err.println("Can't create file: " + fileName);
+            if (saveFile(entry.getValue(), folderPath, fileName)) {
+                fullContentFile.addAll(entry.getValue());
             }
         }
+        saveFile(fullContentFile, folderPath, fullContentFileName);
+        return true;
+    }
 
+    private boolean saveFile(final List<String> content, final String folderPath, final String fileName) {
+        final String file = folderPath + "\\" + fileName + ".txt";
+
+        try {
+            Path path = Paths.get(file);
+            Files.write(path, content, Charset.forName("UTF-8"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (Exception e) {
+            System.err.println("Can't create file: " + fileName);
+            return false;
+        }
         return true;
     }
 
