@@ -7,7 +7,7 @@ import java.util.Map;
 
 public class Main {
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
         final String dbFilePath = "D:\\Programing\\Elex\\main1.db";
         final String outputPath = "D:\\output";
         final String zipPath = "D:\\output.zip";
@@ -15,8 +15,7 @@ public class Main {
         JDBCUtil instance = JDBCUtil.getInstance();
         Map<String, List<String>> dataFromDB = instance.getDataFromDB(dbFilePath);
 
-        System.out.println(instance.exportToTxt(outputPath, dataFromDB, true));
-
-        instance.zipFolder(outputPath, zipPath);
+        System.out.println("Export TXT files: " + instance.exportToTxt(outputPath, dataFromDB, true));
+        System.out.println("ZIP files: " + instance.zipFolder(outputPath, zipPath));
     }
 }

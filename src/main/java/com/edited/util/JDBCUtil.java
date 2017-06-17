@@ -2,10 +2,7 @@ package com.edited.util;
 
 import com.edited.dto.MessageDto;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -49,8 +46,8 @@ public class JDBCUtil {
             Statement statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery(query);
 
-            Set<String> set = new HashSet<>();
-            List<MessageDto> list = new ArrayList<>();
+            Set<String> chatNames = new HashSet<>();
+            List<MessageDto> messagesList = new ArrayList<>();
             while (resultSet.next()) {
                 LocalDateTime time = LocalDateTime.ofInstant(new Timestamp(Long.parseLong(resultSet.getString(1)) * 1000).toInstant(), ZoneOffset.ofHours(0));
                 String chat = resultSet.getString(2);
@@ -59,13 +56,13 @@ public class JDBCUtil {
                 String dialogPartner = resultSet.getString(5);
                 String message = resultSet.getString(6);
 
-                set.add(chat);
-                list.add(new MessageDto(time, chat, fromLoginName, fromDisplayName, dialogPartner, message));
+                chatNames.add(chat);
+                messagesList.add(new MessageDto(time, chat, fromLoginName, fromDisplayName, dialogPartner, message));
             }
 
-            for (String chatName : set) {
+            for (String chatName : chatNames) {
                 List<String> resultList = new ArrayList<>();
-                for (MessageDto elem : list) {
+                for (MessageDto elem : messagesList) {
                     if (elem.getDialogPartner() == null) {
                         if (chatName.equals(elem.getChatName())) {
                             resultList.add(elem.getFullMessage());
@@ -129,16 +126,15 @@ public class JDBCUtil {
         return true;
     }
 
-    public void zipFolder(final String srcFolder, final String destZipFile) throws Exception {
-        ZipOutputStream zip;
-        FileOutputStream fileWriter;
-
-        fileWriter = new FileOutputStream(destZipFile);
-        zip = new ZipOutputStream(fileWriter);
-
-        addFolderToZip("", srcFolder, zip);
-        zip.flush();
-        zip.close();
+    public boolean zipFolder(final String srcFolder, final String destZipFile) {
+        try (ZipOutputStream zip = new ZipOutputStream(new FileOutputStream(destZipFile))) {
+            addFolderToZip("", srcFolder, zip);
+            zip.flush();
+        } catch (Exception e) {
+            System.err.println("Can't zip folder");
+            return false;
+        }
+        return true;
     }
 
     private void addFileToZip(final String path, final String srcFile, ZipOutputStream zip) throws Exception {
