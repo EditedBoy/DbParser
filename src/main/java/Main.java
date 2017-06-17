@@ -5,10 +5,16 @@ import java.util.Map;
 
 public class Main {
 
-    public static void main(String[] args) {
-        JDBCUtil instance = JDBCUtil.getInstance();
-        Map<String, List<String>> dataFromDB = instance.getDataFromDB("D:\\dev\\asdasd1\\l.db");
+    public static void main(String[] args) throws Exception {
+        final String dbFilePath = "D:\\Programing\\Elex\\main1.db";
+        final String outputPath = "D:\\output";
+        final String zipPath = "D:\\output.zip";
 
-        System.out.println(instance.exportToTxt("D:\\dev\\output", dataFromDB));
+        JDBCUtil instance = JDBCUtil.getInstance();
+        Map<String, List<String>> dataFromDB = instance.getDataFromDB(dbFilePath);
+
+        System.out.println(instance.exportToTxt(outputPath, dataFromDB, true));
+
+        instance.zipFolder(outputPath, zipPath);
     }
 }

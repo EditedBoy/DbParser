@@ -3,6 +3,8 @@ package com.edited.util;
 import com.edited.dto.MessageDto;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -13,6 +15,8 @@ import java.sql.*;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 
 public class JDBCUtil {
@@ -37,11 +41,6 @@ public class JDBCUtil {
             }
         }
         return instance;
-    }
-
-
-    private String findFileInResources(final String fileName) {
-        return getClass().getClassLoader().getResource(fileName).getFile();
     }
 
     public Map<String, List<String>> getDataFromDB(final String dbPath) {
@@ -86,10 +85,19 @@ public class JDBCUtil {
         return result;
     }
 
-    public boolean exportToTxt(final String folderPath, Map<String, List<String>> printData) {
-        Path folcerPath = new File(folderPath).toPath();
-        if (!Files.exists(folcerPath)) {
-            return false;
+    public boolean exportToTxt(final String exportPath, Map<String, List<String>> printData, boolean createDirs) {
+        Path folderPath = new File(exportPath).toPath();
+        if (!Files.exists(folderPath)) {
+            if (createDirs) {
+                try {
+                    Files.createDirectories(folderPath);
+                } catch (IOException e) {
+                    System.err.println("Can't create directories by path: " + folderPath.toString());
+                    return false;
+                }
+            } else {
+                return false;
+            }
         }
         List<String> fullContentFile = new ArrayList<>();
         final String fullContentFileName = "_ALL_CONTENT";
@@ -99,11 +107,11 @@ public class JDBCUtil {
             }
             String fileName = entry.getKey();
             fileName = fileName.replaceAll("#", "").replaceAll("/\\$", "_").replaceAll(";", "_");
-            if (saveFile(entry.getValue(), folderPath, fileName)) {
+            if (saveFile(entry.getValue(), exportPath, fileName)) {
                 fullContentFile.addAll(entry.getValue());
             }
         }
-        saveFile(fullContentFile, folderPath, fullContentFileName);
+        saveFile(fullContentFile, exportPath, fullContentFileName);
         return true;
     }
 
@@ -120,6 +128,45 @@ public class JDBCUtil {
             return false;
         }
         return true;
+    }
+
+    public void zipFolder(final String srcFolder, final String destZipFile) throws Exception {
+        ZipOutputStream zip;
+        FileOutputStream fileWriter;
+
+        fileWriter = new FileOutputStream(destZipFile);
+        zip = new ZipOutputStream(fileWriter);
+
+        addFolderToZip("", srcFolder, zip);
+        zip.flush();
+        zip.close();
+    }
+
+    private void addFileToZip(final String path, final String srcFile, ZipOutputStream zip) throws Exception {
+        File folder = new File(srcFile);
+        if (folder.isDirectory()) {
+            addFolderToZip(path, srcFile, zip);
+        } else {
+            byte[] buf = new byte[1024];
+            int len;
+            FileInputStream in = new FileInputStream(srcFile);
+            zip.putNextEntry(new ZipEntry(path + "/" + folder.getName()));
+            while ((len = in.read(buf)) > 0) {
+                zip.write(buf, 0, len);
+            }
+        }
+    }
+
+    private void addFolderToZip(final String path, final String srcFolder, ZipOutputStream zip) throws Exception {
+        File folder = new File(srcFolder);
+
+        for (String fileName : folder.list()) {
+            if (path.equals("")) {
+                addFileToZip(folder.getName(), srcFolder + "/" + fileName, zip);
+            } else {
+                addFileToZip(path + "/" + folder.getName(), srcFolder + "/" + fileName, zip);
+            }
+        }
     }
 
     public List<String> getTableColumns(final Connection connection, final String tableName) throws SQLException {
